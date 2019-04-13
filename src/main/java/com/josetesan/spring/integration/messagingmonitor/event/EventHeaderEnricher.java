@@ -1,39 +1,34 @@
 package com.josetesan.spring.integration.messagingmonitor.event;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.metrics.GaugeService;
 import org.springframework.integration.dsl.HeaderEnricherSpec;
 import org.springframework.messaging.Message;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
 
 
 @Service
 public class EventHeaderEnricher {
 
     private String salt = null;
+    private Timer timer;
     private static final String password = "myS3cr3tPassw0rd";
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHeaderEnricher.class);
 
-    private final GaugeService gaugeService;
 
     @Autowired
-    public EventHeaderEnricher(GaugeService gaugeService) {
-        this.gaugeService = gaugeService;
+    public EventHeaderEnricher(MeterRegistry registry) {
         this.salt = KeyGenerators.string().generateKey();
+        this.timer = registry.timer("timer.sign");
     }
 
     public void sign(HeaderEnricherSpec h) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        h.headerFunction("sign", this::signMessage);
-        stopWatch.stop();
-
-        gaugeService.submit("histogram.enricher", stopWatch.getLastTaskTimeMillis());
+        this.timer.record(()->h.headerFunction("sign", this::signMessage));
     }
 
     private Object signMessage(Message<Event> message) {

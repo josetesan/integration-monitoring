@@ -3,6 +3,7 @@ package com.josetesan.spring.integration.messagingmonitor;
 import com.josetesan.spring.integration.messagingmonitor.event.EventHeaderEnricher;
 import com.josetesan.spring.integration.messagingmonitor.event.EventProcessor;
 import com.josetesan.spring.integration.messagingmonitor.event.EventRowMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,7 @@ import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessageSource;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.dsl.core.Pollers;
+import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.jdbc.JdbcPollingChannelAdapter;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -34,6 +35,8 @@ public class IntegrationConfiguration {
     @Autowired
     private EventHeaderEnricher eventHeaderEnricher;
 
+
+
     @Bean
     public DirectChannel inputChannel() {
         return new DirectChannel();
@@ -48,7 +51,7 @@ public class IntegrationConfiguration {
     public MessageSource<Object> jdbcMessageSource() {
 
         JdbcPollingChannelAdapter ms =
-                new JdbcPollingChannelAdapter(this.datasource, "SELECT * FROM Eventos where PROCESSED is false");
+                new JdbcPollingChannelAdapter(this.datasource, "SELECT * FROM MOCK_DATA where PROCESSED is false");
 
         ms.setRowMapper(new EventRowMapper());
         ms.setUpdatePerRow(true);

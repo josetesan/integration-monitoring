@@ -1,14 +1,18 @@
-graphite:
-    host: 192.168.1.36
-    port: 2003
 spring:
     datasource:
-        url: jdbc:postgresql://192.168.1.36:5432/integration
+        url: jdbc:postgresql://192.168.1.40:5432/integration
         username: postgres
         password: mysecretpassword
-        initialize: false
+        initialization-mode: never
     rabbitmq:
-      host: 192.168.1.36
+      host: 192.168.1.40
       username: guest
       password: guest
 
+management:
+  metrics:
+    export:
+      graphite:
+        host: 192.168.1.40
+        step: 1s
+        port: 2004
