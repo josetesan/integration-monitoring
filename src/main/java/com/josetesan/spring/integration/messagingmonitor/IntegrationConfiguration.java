@@ -3,9 +3,7 @@ package com.josetesan.spring.integration.messagingmonitor;
 import com.josetesan.spring.integration.messagingmonitor.event.EventHeaderEnricher;
 import com.josetesan.spring.integration.messagingmonitor.event.EventProcessor;
 import com.josetesan.spring.integration.messagingmonitor.event.EventRowMapper;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.amqp.outbound.AmqpOutboundEndpoint;
@@ -23,19 +21,6 @@ import javax.sql.DataSource;
 @Configuration
 public class IntegrationConfiguration {
 
-    @Autowired
-    private DataSource datasource;
-
-    @Autowired
-    private EventProcessor eventProcessor;
-
-    @Autowired
-    private AmqpTemplate amqpTemplate;
-
-    @Autowired
-    private EventHeaderEnricher eventHeaderEnricher;
-
-
 
     @Bean
     public DirectChannel inputChannel() {
@@ -48,21 +33,21 @@ public class IntegrationConfiguration {
     }
 
     @Bean
-    public MessageSource<Object> jdbcMessageSource() {
+    public MessageSource<Object> jdbcMessageSource(DataSource datasource) {
 
         JdbcPollingChannelAdapter ms =
-                new JdbcPollingChannelAdapter(this.datasource, "SELECT * FROM MOCK_DATA where PROCESSED is false");
+                new JdbcPollingChannelAdapter(datasource, "SELECT * FROM MOCK_DATA where PROCESSED is false");
 
         ms.setRowMapper(new EventRowMapper());
         ms.setUpdatePerRow(true);
-        ms.setUpdateSql("UPDATE EVENTOS SET PROCESSED=TRUE");
+        ms.setUpdateSql("UPDATE MOCK_DATA SET PROCESSED=TRUE");
         return ms;
     }
 
     @Bean
-    public AmqpOutboundEndpoint amqpOutboundEndpoint() {
+    public AmqpOutboundEndpoint amqpOutboundEndpoint( AmqpTemplate amqpTemplate) {
 
-        AmqpOutboundEndpoint endpoint = new AmqpOutboundEndpoint(this.amqpTemplate);
+        AmqpOutboundEndpoint endpoint = new AmqpOutboundEndpoint(amqpTemplate);
         endpoint.setExchangeName("josetest");
         endpoint.setRequiresReply(false);
         endpoint.setRoutingKey("#");
@@ -71,21 +56,21 @@ public class IntegrationConfiguration {
     }
 
     @Bean
-    public IntegrationFlow pollingFlow() {
+    public IntegrationFlow pollingFlow(DataSource datasource,EventProcessor eventProcessor,EventHeaderEnricher eventHeaderEnricher,AmqpTemplate amqpTemplate) {
         return IntegrationFlows
-                .from(jdbcMessageSource(),
-                        c -> c.poller(Pollers.fixedRate(100).maxMessagesPerPoll(10)))
+                .from(jdbcMessageSource(datasource),
+                        c -> c.poller(Pollers.fixedRate(100).maxMessagesPerPoll(20)))
                 .channel(inputChannel())
                 .split()
-                .enrichHeaders(h -> eventHeaderEnricher.sign(h))
+                .enrichHeaders(eventHeaderEnricher::sign)
                 .handle(eventProcessor)
                 .aggregate(a -> a.releaseStrategy( g-> g.size()==10))
-                .handle(amqpOutboundEndpoint())
+                .handle(amqpOutboundEndpoint(amqpTemplate))
                 .get();
     }
 
     @Bean
-    TaskScheduler taskScheduler() {
+    public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler  task = new ThreadPoolTaskScheduler();
         task.setPoolSize(16);
         return task;

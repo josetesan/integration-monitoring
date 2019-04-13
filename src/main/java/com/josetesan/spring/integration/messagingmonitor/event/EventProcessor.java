@@ -21,8 +21,8 @@ public class EventProcessor  {
 
     public EventProcessor(MeterRegistry registry) {
 
-        counter = registry.counter("counter.eventprocessor");
-        timer = registry.timer("timer.eventprocessor");
+        counter = registry.counter("counter.eventprocessor","app=test","events=process");
+        timer = registry.timer("timer.eventprocessor","events=sing");
     }
 
 
@@ -32,7 +32,7 @@ public class EventProcessor  {
         counter.increment(1.0);
         timer.record(()-> {
             try {
-                TimeUnit.MILLISECONDS.sleep((long) (Math.random() * 5) * 1000);
+                TimeUnit.MILLISECONDS.sleep((long) (Math.random() * 5) * 100);
                 LOGGER.info("Fecha es {}", message.getPayload().getFecha());
             }  catch (Exception e) {
                 LOGGER.error("Exception thrown ",e);

@@ -1,0 +1,28 @@
+version: '3.6'
+
+services:
+  rabbit:
+     image: rabbitmq:3.7-management-alpine
+     ports:
+       - 5672:5672
+       - 15672:15672
+
+  prometheus:
+     image: prom/prometheus
+     ports:
+        - 9090:9090
+
+  postgres:
+     image: postgres:11-alpine
+     ports:
+        - 5432:5432
+     environment:
+        - POSTGRES_PASSWORD=mysecretpassword
+
+networks:
+  - monitoring-network
+
+
+
+
+

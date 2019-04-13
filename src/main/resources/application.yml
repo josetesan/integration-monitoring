@@ -12,7 +12,8 @@ spring:
 management:
   metrics:
     export:
-      graphite:
-        host: 192.168.1.40
+      prometheus:
         step: 1s
-        port: 2004
+        pushgateway:
+          base-url: 192.168.1.40:9091
+          job: integration-monitoring
