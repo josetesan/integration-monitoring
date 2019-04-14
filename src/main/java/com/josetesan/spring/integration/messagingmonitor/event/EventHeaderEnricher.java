@@ -24,7 +24,7 @@ public class EventHeaderEnricher {
     @Autowired
     public EventHeaderEnricher(MeterRegistry registry) {
         this.salt = KeyGenerators.string().generateKey();
-        this.timer = registry.timer("timer.sign","timer=event");
+        this.timer = registry.timer("message.signed","messages","sign","operation","sign");
     }
 
     public void sign(HeaderEnricherSpec h) {

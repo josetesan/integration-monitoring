@@ -45,12 +45,12 @@ public class IntegrationConfiguration {
     }
 
     @Bean
-    public AmqpOutboundEndpoint amqpOutboundEndpoint( AmqpTemplate amqpTemplate) {
+    public AmqpOutboundEndpoint amqpOutboundEndpoint(AmqpTemplate amqpTemplate) {
 
         AmqpOutboundEndpoint endpoint = new AmqpOutboundEndpoint(amqpTemplate);
         endpoint.setExchangeName("josetest");
         endpoint.setRequiresReply(false);
-        endpoint.setRoutingKey("#");
+        endpoint.setRoutingKey("1");
         endpoint.setOutputChannel(outputChannel());
         return endpoint;
     }

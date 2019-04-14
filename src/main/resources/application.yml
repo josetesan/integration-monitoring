@@ -13,7 +13,14 @@ management:
   metrics:
     export:
       prometheus:
-        step: 1s
-        pushgateway:
-          base-url: 192.168.1.40:9091
-          job: integration-monitoring
+        enabled: true
+        step: 5s
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
